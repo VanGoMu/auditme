@@ -1,0 +1,30 @@
+[Unit]
+Description=Debian Monitoring Stack (InfluxDB, Fluent Bit, Grafana)
+Documentation=https://github.com/VanOps/auditme
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=${AUDITME_PROJECT_DIR}
+ExecStartPre=/usr/bin/docker compose -f docker-compose.yml pull --quiet --ignore-pull-failures
+ExecStart=/usr/bin/docker compose -f docker-compose.yml up -d --remove-orphans
+ExecStop=/usr/bin/docker compose -f docker-compose.yml down
+ExecReload=/usr/bin/docker compose -f docker-compose.yml restart
+TimeoutStartSec=180
+TimeoutStopSec=120
+Restart=on-failure
+RestartSec=10s
+
+# Security hardening
+PrivateTmp=yes
+NoNewPrivileges=yes
+
+# Resource limits (optional - adjust as needed)
+# MemoryLimit=2G
+# CPUQuota=80%
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,84 @@
+services:
+  influxdb:
+    image: influxdb:${INFLUXDB_VERSION}
+    container_name: influxdb
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8086:8086"
+    volumes:
+      - ./influxdb-data:/var/lib/influxdb2
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_ADMIN_USER}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_ADMIN_PASSWORD}
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_BUCKET}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_TOKEN}
+    networks:
+      - ${MONITORING_NETWORK}
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  fluent-bit:
+    image: fluent/fluent-bit:${FLUENTBIT_VERSION}
+    container_name: fluent-bit
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    volumes:
+      # Access to system journal (read-only)
+      - /var/log/journal:/var/log/journal:ro
+      - /run/systemd:/run/systemd:ro
+      # Fluent Bit configuration
+      - ./fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+      - ./fluent-bit/bucket_router.lua:/fluent-bit/etc/bucket_router.lua:ro
+    environment:
+      - INFLUX_TOKEN=${INFLUXDB_TOKEN}
+      - INFLUX_ORG=${INFLUXDB_ORG}
+      - INFLUX_BUCKET=${INFLUXDB_BUCKET}
+      - LOG_LEVEL=${FLUENTBIT_LOG_LEVEL}
+    networks:
+      - ${MONITORING_NETWORK}
+    user: "0"  # Root required to read journal and kern.log
+
+  grafana:
+    image: grafana/grafana:${GRAFANA_VERSION}
+    container_name: grafana
+    restart: unless-stopped
+    user: "${UID:-1000}:${GID:-1000}"
+    env_file: .env
+    depends_on:
+      - influxdb
+    ports:
+      - "${GRAFANA_PORT}:3000"
+    volumes:
+      - ./grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_INSTALL_PLUGINS=
+      - GF_SERVER_ROOT_URL=http://localhost:${GRAFANA_PORT}
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_PATHS_DATA=/var/lib/grafana
+      - GF_PATHS_LOGS=/var/lib/grafana/logs
+      - GF_PATHS_PLUGINS=/var/lib/grafana/plugins
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+      - GF_FEATURE_TOGGLES_ENABLE=
+      - GF_LOG_LEVEL=error
+      - GF_LOG_FILTERS=publicdashboards:critical
+    networks:
+      - ${MONITORING_NETWORK}
+
+networks:
+  monitoring-net:
+    driver: bridge
+    name: ${MONITORING_NETWORK}

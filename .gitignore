@@ -1,0 +1,21 @@
+# Sensitive environment variables
+.env
+
+# Auto-generated configuration
+.auditme.conf
+
+# InfluxDB data
+influxdb-data/
+
+# Grafana data
+grafana-data/
+
+# Local logs
+*.log
+
+# Docker
+.docker/
+
+# OS files
+.DS_Store
+Thumbs.db
