@@ -2,6 +2,8 @@
 
 This directory contains systemd service files to run the Auditme monitoring stack automatically on system boot.
 
+The `setup.sh` must be launched before service instalation to ensure all requierments are installed.
+
 ## How It Works
 
 The service uses **environment variable substitution** via `envsubst` to automatically configure the project path:

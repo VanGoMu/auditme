@@ -5,23 +5,12 @@ set -e
 
 echo "🚀 Setting up Debian Monitoring System..."
 
-# Set current user for Grafana (no sudo needed)
-echo "🔒 Setting Grafana permissions for current user..."
-export UID=$(id -u)
-export GID=$(id -g)
-echo "   Using UID=$UID and GID=$GID"
-
 # Create directory structure with proper ownership
 echo "📁 Creating directory structure..."
 mkdir -p fluent-bit grafana/provisioning/datasources grafana/provisioning/dashboards grafana/dashboards
 
 # Create data directories with current user ownership
 mkdir -p influxdb-data grafana-data
-chown -R $UID:$GID grafana-data 2>/dev/null || {
-    echo "⚠️  Note: Could not set grafana-data ownership. Running sudo..."
-    sudo chown -R $UID:$GID grafana-data
-}
-echo "   ✓ grafana-data owned by $UID:$GID"
 
 # Check if .env exists
 if [ ! -f .env ]; then

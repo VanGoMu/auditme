@@ -2,6 +2,10 @@
 
 Lightweight monitoring system for Debian using Docker Compose, Fluent Bit, InfluxDB 2.7, and Grafana dashboards.
 
+## Grafana dashboard Preview
+
+![alt text](image.png)
+
 ## Features
 
 - ✅ No software installation on host (Docker only)
