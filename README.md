@@ -203,32 +203,6 @@ docker compose logs -f
 docker compose restart fluent-bit
 ```
 
-## File Structure
-
-```
-.
-├── docker-compose.yml       # Service definitions (InfluxDB, Fluent Bit, Grafana)
-├── .env.example             # Environment variables template
-├── .env                     # Environment variables (do not version)
-├── setup.sh                 # Quick setup script
-├── fluent-bit/
-│   ├── fluent-bit.conf     # Fluent Bit configuration
-│   └── bucket_router.lua   # Lua script for monthly bucket tagging
-├── grafana/
-│   ├── provisioning/
-│   │   ├── datasources/    # Auto-configured InfluxDB datasource
-│   │   └── dashboards/     # Dashboard provisioning config
-│   └── dashboards/
-│       └── system-monitoring.json  # System monitoring dashboard
-├── influxdb-data/          # InfluxDB persistent data (created on startup)
-├── grafana-data/           # Grafana persistent data (created on startup)
-├── docs/
-│   ├── fluent-bit-guide.md        # Complete Fluent Bit guide
-│   ├── lua-basics.md              # Lua syntax for Fluent Bit
-│   └── influxdb-introduction.md   # InfluxDB concepts and queries
-└── README.md               # This documentation
-```
-
 ## System Monitoring
 
 **Grafana Dashboard** (http://localhost:3000):
